@@ -36,6 +36,7 @@ function fail(message: string): never {
 }
 
 const inputArg = flag('input', '/input');
+// A directory means its snapshot.json; a .json path is used as given.
 const inputFile = inputArg.endsWith('.json') ? inputArg : join(inputArg, 'snapshot.json');
 if (!existsSync(inputFile)) {
   fail(`no snapshot at ${inputFile}: pass --input <snapshot.json|directory> or mount the sealed /input`);
@@ -95,6 +96,10 @@ for (const name of shots) {
 }
 
 // The dossier is written last: the scorer rebuilds it from this /output and compares bytes.
+// Rebuild it here from the same files and compare: a dossier that does not survive
+// its own rebuild is not the dossier the gate compares against. (The comparison is
+// byte for byte, so any difference in the dashboard, the screenshots or the board
+// shows up here before anything is submitted.)
 const dossierOpts = { text_max_bytes: TEXT_MAX_BYTES, screenshots: SCREENSHOT_CAPS, dashboard: { max_files: 400, max_bytes: 4_194_304 } };
 writeFileSync(join(out, 'dossier.json'), buildDossier(out, dossierOpts));
 // Re-read what was written and compare against a fresh build: a dossier that does not survive

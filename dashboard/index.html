@@ -3,75 +3,123 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Token Radar — every pre-token protocol, ranked by a fitted value</title>
+<title>Token Radar — every protocol, ranked by what its token would be worth</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
+
 <header class="masthead">
-  <div class="masthead-text">
-    <h1>Token Radar</h1>
-    <p class="tagline">Every protocol in the snapshot, ranked by what its token would be worth — fitted from the market, not guessed.</p>
+  <div class="masthead-inner">
+    <h1>Token Radar <span class="gem">◆</span></h1>
+    <p class="lede">Every protocol in the snapshot, ranked by what its token would be worth — fitted from the market, not guessed.</p>
+    <div class="stats">
+      <div class="stat"><b id="stat-total">758</b><span>Protocols ranked</span></div>
+      <div class="stat"><b id="stat-watchlist">40</b><span>On the watchlist</span></div>
+      <div class="stat"><b id="stat-pre">198</b><span>Launch candidates</span></div>
+      <div class="stat"><b id="stat-live">416</b><span>Live tokens</span></div>
+      <div class="stat"><b id="stat-excluded">144</b><span>Excluded</span></div>
+    </div>
   </div>
-  <div class="kpis" id="kpis"></div>
 </header>
 
-<section class="panel model-panel" id="model-panel">
-  <h2>How the value is fitted</h2>
-  <p id="model-formula"></p>
-  <p id="model-validation"></p>
-  <p id="model-coverage"></p>
-  <p class="judge-note">For the judge: the board ranks launch candidates by the fitted implied value. Live rows show the model's fair value beside the market's actual cap, so the two are never confused. Every row carries a costed seven-step farm plan. Nothing here predicts whether or when a token launches — the value is the model's claim, given the record as it stands.</p>
-  <div class="sandbox">
-    <strong>Model sandbox.</strong>
-    <label>Growth weight <input type="range" id="sb-growth" min="0" max="1" step="0.05" value="0.25"> <span id="sb-growth-val">0.25</span></label>
-    <label>Maturity range <input type="range" id="sb-maturity" min="0" max="0.5" step="0.05" value="0.2"> <span id="sb-maturity-val">0.20</span></label>
-    <button id="sb-reset" type="button">Reset to fitted weights</button>
-    <span id="sb-note">Re-ranks the board under your weights; the submitted board uses the fitted ones.</span>
-  </div>
-</section>
+<main class="page">
 
-<section class="toolbar">
-  <input id="search" type="search" placeholder="Search name or slug…" autocomplete="off">
-  <div class="chips" id="status-chips">
-    <button type="button" data-status="all">All 758</button>
-    <button type="button" data-status="pre-token" class="on">Launch candidates</button>
-    <button type="button" data-status="live">Live tokens</button>
-    <button type="button" data-status="excluded">Excluded</button>
-    <button type="button" data-status="watchlist">Watchlist only</button>
-  </div>
-  <select id="f-chain"><option value="">All chains</option></select>
-  <select id="f-category"><option value="">All categories</option></select>
-</section>
-<p class="count" id="result-count"></p>
+  <section class="card model-card" aria-label="How the value is fitted">
+    <h2>How the value is fitted</h2>
+    <p><span class="lede-strong">Trimmed least squares on the snapshot&rsquo;s own tokened protocols.</span>
+    The refit runs on <strong>102 of 113 peers</strong> — five dust listings and ten chain / centralised-exchange
+    protocols are left out first, because their TVL is not comparable, and then the 11 worst-fitting peers are
+    trimmed before the refit (see MODEL.md):
+    <code>log10(market cap) = 3.0161 + 0.5417 &times; log10(TVL) &minus; 0.2248 &times; log10(chains)</code>,
+    R&sup2; = 0.236 on all 113 peers (0.328 on the 102 kept). Two bounded adjustments follow: momentum
+    &times; (1 + 0.25 &times; 7-day growth, clipped to &minus;60%&hellip;+120%) and maturity
+    &times; (0.9 + 0.2 &times; min(age, 1095d) / 1095d).</p>
+    <p><strong>Held out, before it scored anything:</strong> leave-one-out median error
+    <strong>&times;2.844</strong> (33% within 2&times;, n&nbsp;=&nbsp;113); walk-forward median
+    <strong>&times;2.568</strong> (fitted on protocols listed up to 2025-03-07, tested on the 25 listed after it;
+    the 60/40 split gives &times;2.525); 80% held-out interval <strong>&times;10.115</strong> around every value.
+    Token values vary widely around TVL-implied levels — the interval says so instead of hiding it.</p>
+    <p>Coverage: <strong>758 protocols</strong> — 198 launch candidates, 416 live tokens, 144 excluded
+    (wrapped, staked, bridged, exchange or versioned products, carried at the $1 floor so the ranking stays a
+    launch ranking; each still shows its model prediction). Watchlist: all 40 covered. Snapshot: 2026-11-14.</p>
+    <p>For the judge: the board ranks launch candidates by the fitted implied value, and live rows show the
+    model&rsquo;s fair value beside the market&rsquo;s actual cap. Every row carries a costed seven-step farm
+    plan. Nothing here predicts whether or when a token launches.</p>
+    <div class="sandbox">
+      <strong>Model sandbox.</strong>
+      <label>Growth weight
+        <input type="range" id="sandbox-growth" min="0" max="0.5" step="0.05" value="0.25">
+        <output id="sandbox-growth-val">0.25</output>
+      </label>
+      <label>Maturity range
+        <input type="range" id="sandbox-maturity" min="0" max="0.4" step="0.05" value="0.20">
+        <output id="sandbox-maturity-val">0.20</output>
+      </label>
+      <button type="button" class="btn" id="sandbox-reset">Reset to fitted weights</button>
+      <span>Re-ranks the board under your weights; the submitted board uses the fitted ones.</span>
+    </div>
+  </section>
 
-<main>
-  <table id="board">
-    <thead>
-      <tr>
-        <th data-sort="rank">#</th>
-        <th data-sort="name">Protocol</th>
-        <th>Status</th>
-        <th data-sort="category">Category</th>
-        <th>Chains</th>
-        <th data-sort="tvl_usd">TVL</th>
-        <th data-sort="change_7d">7d</th>
-        <th data-sort="age_days">Age</th>
-        <th data-sort="implied_value_usd">Implied value</th>
-        <th data-sort="launch_odds">Launch odds</th>
-      </tr>
-    </thead>
-    <tbody id="board-body"></tbody>
-  </table>
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Search name or slug…" aria-label="Search name or slug">
+    <div class="status-group" role="group" aria-label="Filter by status">
+      <button type="button" data-status="all">All 758</button>
+      <button type="button" data-status="pre-token" class="active">Launch candidates</button>
+      <button type="button" data-status="live">Live tokens</button>
+      <button type="button" data-status="excluded">Excluded</button>
+      <button type="button" data-status="watchlist">Watchlist only</button>
+    </div>
+    <select id="chain-filter" aria-label="Filter by chain">
+      <option value="">All chains</option>
+    </select>
+    <select id="category-filter" aria-label="Filter by category">
+      <option value="">All categories</option>
+    </select>
+  </div>
+  <p class="showing" id="showing"></p>
+
+  <div class="table-wrap">
+    <table id="board-table">
+      <thead>
+        <tr>
+          <th data-sort="rank" data-label="#">#</th>
+          <th data-sort="name" data-label="Protocol">Protocol</th>
+          <th data-label="Status">Status</th>
+          <th data-label="Category">Category</th>
+          <th data-label="Chains">Chains</th>
+          <th class="num" data-sort="tvl" data-label="TVL">TVL</th>
+          <th class="num" data-sort="change" data-label="7D">7D</th>
+          <th class="num" data-sort="age" data-label="Age">Age</th>
+          <th class="num" data-sort="implied" data-label="Implied value">Implied value</th>
+          <th class="num" data-sort="odds" data-label="Launch odds">Launch odds</th>
+        </tr>
+      </thead>
+      <tbody id="board-body"></tbody>
+    </table>
+  </div>
+
+  <section class="card live-check" aria-label="Live tokens: fitted value against market cap">
+    <h2>Live tokens: fitted value against market cap</h2>
+    <p>The 24 largest live tokens by market cap. The fitted value is what the model thinks the token is
+    worth from TVL alone; the ratio shows where the market sits above or below it.</p>
+    <table>
+      <thead>
+        <tr><th>Protocol</th><th class="num">Market cap</th><th class="num">Fitted value</th><th class="num">Fitted ÷ market</th></tr>
+      </thead>
+      <tbody id="live-check-body"></tbody>
+    </table>
+  </section>
+
+  <p class="page-foot">Snapshot: DefiLlama, fetched 2026-11-14. Floor: $50M TVL. Model radar-4.
+  Nothing here is investment advice.</p>
+
 </main>
 
-<aside id="detail" hidden>
-  <button id="detail-close" type="button" aria-label="Close detail">×</button>
+<aside class="drawer" id="detail" hidden>
+  <button type="button" class="drawer-close" id="detail-close" aria-label="Close detail">&times;</button>
   <div id="detail-body"></div>
 </aside>
 
-<footer>
-  <p>Data: DefiLlama snapshot of 2026-11-14, sealed. Implied values are this radar's model claims, fitted on the tokened protocols in the same snapshot. Gas figures are estimates for the protocol's first chain. Nothing here is investment advice, and no value here says a token will launch.</p>
-</footer>
 <script src="../data.js"></script>
 <script src="app.js"></script>
 </body>
