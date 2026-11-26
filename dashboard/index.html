@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — every pre-token protocol, ranked by a fitted value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-text">
+    <h1>Token Radar</h1>
+    <p class="tagline">Every protocol in the snapshot, ranked by what its token would be worth — fitted from the market, not guessed.</p>
+  </div>
+  <div class="kpis" id="kpis"></div>
+</header>
+
+<section class="panel model-panel" id="model-panel">
+  <h2>How the value is fitted</h2>
+  <p id="model-formula"></p>
+  <p id="model-validation"></p>
+  <p id="model-coverage"></p>
+  <p class="judge-note">For the judge: the board ranks launch candidates by the fitted implied value. Live rows show the model's fair value beside the market's actual cap, so the two are never confused. Every row carries a costed seven-step farm plan. Nothing here predicts whether or when a token launches — the value is the model's claim, given the record as it stands.</p>
+  <div class="sandbox">
+    <strong>Model sandbox.</strong>
+    <label>Growth weight <input type="range" id="sb-growth" min="0" max="1" step="0.05" value="0.25"> <span id="sb-growth-val">0.25</span></label>
+    <label>Maturity range <input type="range" id="sb-maturity" min="0" max="0.5" step="0.05" value="0.2"> <span id="sb-maturity-val">0.20</span></label>
+    <button id="sb-reset" type="button">Reset to fitted weights</button>
+    <span id="sb-note">Re-ranks the board under your weights; the submitted board uses the fitted ones.</span>
+  </div>
+</section>
+
+<section class="toolbar">
+  <input id="search" type="search" placeholder="Search name or slug…" autocomplete="off">
+  <div class="chips" id="status-chips">
+    <button type="button" data-status="all">All 758</button>
+    <button type="button" data-status="pre-token" class="on">Launch candidates</button>
+    <button type="button" data-status="live">Live tokens</button>
+    <button type="button" data-status="excluded">Excluded</button>
+    <button type="button" data-status="watchlist">Watchlist only</button>
+  </div>
+  <select id="f-chain"><option value="">All chains</option></select>
+  <select id="f-category"><option value="">All categories</option></select>
+</section>
+<p class="count" id="result-count"></p>
+
+<main>
+  <table id="board">
+    <thead>
+      <tr>
+        <th data-sort="rank">#</th>
+        <th data-sort="name">Protocol</th>
+        <th>Status</th>
+        <th data-sort="category">Category</th>
+        <th>Chains</th>
+        <th data-sort="tvl_usd">TVL</th>
+        <th data-sort="change_7d">7d</th>
+        <th data-sort="age_days">Age</th>
+        <th data-sort="implied_value_usd">Implied value</th>
+        <th data-sort="launch_odds">Launch odds</th>
+      </tr>
+    </thead>
+    <tbody id="board-body"></tbody>
+  </table>
+</main>
+
+<aside id="detail" hidden>
+  <button id="detail-close" type="button" aria-label="Close detail">×</button>
+  <div id="detail-body"></div>
+</aside>
+
+<footer>
+  <p>Data: DefiLlama snapshot of 2026-11-14, sealed. Implied values are this radar's model claims, fitted on the tokened protocols in the same snapshot. Gas figures are estimates for the protocol's first chain. Nothing here is investment advice, and no value here says a token will launch.</p>
+</footer>
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
